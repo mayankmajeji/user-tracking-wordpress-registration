@@ -1,0 +1,54 @@
+<?php 
+
+/**
+ * Add user meta on registration
+ *
+ * @param int $user_id User ID
+ * @return void
+ */
+function maverick_register_add_meta($user_id)
+{
+	add_user_meta($user_id, 'maverick_login_count', '1');
+
+	$log_data = [
+		'Timestamp'       => date('Y-m-d H:i:s'),
+		'IP'              => $_SERVER['REMOTE_ADDR'],
+		'User Agent'      => $_SERVER['HTTP_USER_AGENT'],
+		'Referrer'        => $_SERVER['HTTP_REFERER'] ?? 'Direct Access',
+		'Request Method'  => $_SERVER['REQUEST_METHOD'], // GET, POST, etc.
+		'Request URI'     => $_SERVER['REQUEST_URI'], // The endpoint being accessed
+		'Query String'    => $_SERVER['QUERY_STRING'], // Any query params
+		'POST Data'       => $_POST, // Form data being submitted (sanitize before logging)
+		'GET Data'        => $_GET, // Query parameters (sanitize before logging)
+		'Cookies'         => $_COOKIE, // Active cookies
+		'Headers'         => getallheaders(), // All request headers
+		'Session Data'    => $_SESSION ?? 'No session', // If sessions are enabled
+		'IP Geolocation'  => ($_SERVER['REMOTE_ADDR']), // Custom function for geo data
+		'Content-Type'       => $_SERVER['CONTENT_TYPE'] ?? 'Not Set',
+		'Authorization'      => $_SERVER['HTTP_AUTHORIZATION'] ?? 'None',
+		'TLS Version'        => $_SERVER['SSL_PROTOCOL'] ?? 'Unknown',
+		'Execution Time'     => microtime(true) - $_SERVER['REQUEST_TIME_FLOAT'],
+		'JavaScript Enabled' => $_COOKIE['js_enabled'] ?? 'Unknown',
+		'Language'           => $_SERVER['HTTP_ACCEPT_LANGUAGE'] ?? 'Unknown',
+		'Timezone Offset'    => $_COOKIE['timezone_offset'] ?? 'Unknown',
+		'Screen Resolution'  => $_COOKIE['screen_resolution'] ?? 'Unknown',
+		'Email Domain'       => explode('@', $_POST['email'] ?? '')[1] ?? 'Unknown',
+		'Repeated IP Usage'  => maverick_check_ip_repeat($_SERVER['REMOTE_ADDR']),
+    ];
+
+    add_user_meta($user_id, 'maverick_login_log', $log_data);
+}
+
+add_action('user_register', 'maverick_register_add_meta');
+
+/**
+ * Check if IP is repeated
+ *
+ * @param string $ip IP address
+ * @return int Count of IP usage
+ */
+function maverick_check_ip_repeat($ip) {
+    $count = get_option("maverick_ip_count_$ip", 0);
+    update_option("maverick_ip_count_$ip", $count + 1);
+    return $count;
+}
