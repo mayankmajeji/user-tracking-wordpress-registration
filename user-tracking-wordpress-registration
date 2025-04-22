@@ -8,8 +8,11 @@
  */
 function maverick_register_add_meta($user_id)
 {
+
+    // Set login count to 1 on user registration
     add_user_meta($user_id, 'maverick_login_count', '1');
 
+    // Log user login data
     $log_data = [
         'Timestamp'          => date('Y-m-d H:i:s'),
         'IP'                 => $_SERVER['REMOTE_ADDR'],
@@ -36,9 +39,11 @@ function maverick_register_add_meta($user_id)
         'Repeated IP Usage'  => maverick_check_ip_repeat($_SERVER['REMOTE_ADDR']),
     ];
 
+    // Add login log to user meta
     add_user_meta($user_id, 'maverick_login_log', $log_data);
 }
 
+// Add action to run the function on user registration
 add_action('user_register', 'maverick_register_add_meta');
 
 /**
@@ -49,7 +54,10 @@ add_action('user_register', 'maverick_register_add_meta');
  */
 function maverick_check_ip_repeat($ip)
 {
+    // Get IP count from option
     $count = get_option("maverick_ip_count_$ip", 0);
+    // Update IP count
     update_option("maverick_ip_count_$ip", $count + 1);
+    // Return IP count
     return $count;
 }
